@@ -1,19 +1,15 @@
-// api/websocket.js
+const express = require('express');
+const cors = require('cors');
 const WebSocket = require('ws');
-const cors = require('cors');
 
-let participants = [];
-let waitingParticipants = [];
+const app = express();
 
-const cors = require('cors');
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST'],
-}));
+// Usar o middleware CORS
+app.use(cors());
 
-module.exports = (req, res) => {
-    // Adicionar cabeçalhos CORS
-    res.setHeader('Access-Control-Allow-Origin', '*'); // ou defina o domínio específico
+// Defina suas rotas
+app.get('/api/websocket', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
 
     if (req.method === 'GET') {
@@ -38,7 +34,6 @@ module.exports = (req, res) => {
                             }
                             broadcast();
                         } else {
-                            // Enviar mensagem de erro se o participante já existir
                             ws.send(JSON.stringify({ error: 'Participante já existe na sala ou na fila de espera.' }));
                         }
                     } else if (data.type === 'REMOVE_PARTICIPANT') {
@@ -54,10 +49,12 @@ module.exports = (req, res) => {
             });
         });
     } else {
-        // Se não for um método GET, envie um erro
         res.status(405).end(); // Método não permitido
     }
-};
+});
+
+let participants = [];
+let waitingParticipants = [];
 
 function broadcast() {
     const message = JSON.stringify({ participants, waitingParticipants });
@@ -67,3 +64,5 @@ function broadcast() {
         }
     });
 }
+
+module.exports = app; // Exportar o aplicativo Express

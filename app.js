@@ -15,7 +15,8 @@ let waitingParticipants = JSON.parse(localStorage.getItem('waitingParticipants')
 let currentNick = localStorage.getItem('userNick') || ''; 
 
 // Conectando ao servidor WebSocket
-const socket = new WebSocket(`wss://${window.location.host}/api/websocket`);
+// const socket = new WebSocket(`wss://${window.location.host}/api/websocket`);
+const socket = new WebSocket('wss://raid-cris.vercel.app/api/websocket');
 
 socket.onopen = () => {
     console.log('Conectado ao servidor WebSocket');
