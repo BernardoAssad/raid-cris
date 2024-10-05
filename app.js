@@ -15,15 +15,13 @@ let waitingParticipants = JSON.parse(localStorage.getItem('waitingParticipants')
 let currentNick = localStorage.getItem('userNick') || ''; 
 
 // Conectando ao servidor WebSocket
-const socket = new WebSocket(`ws://${window.location.host}/api/websocket`);
+const socket = new WebSocket(`wss://${window.location.host}/api/websocket`);
 
 socket.onopen = () => {
     console.log('Conectado ao servidor WebSocket');
 
     // Enviar um nome de participante como exemplo
-    if (currentNick) {
-        socket.send(JSON.stringify({ type: 'ADD_PARTICIPANT', name: currentNick }));
-    }
+    socket.send(JSON.stringify({ type: 'ADD_PARTICIPANT', name: currentNick }));
 };
 
 socket.onmessage = (event) => {
@@ -49,8 +47,12 @@ function saveParticipants() {
 }
 
 function updateRoom() {
-    roomList.innerHTML = ''; 
+    roomList.innerHTML = '';
     waitingList.innerHTML = '';
+
+    if (participants.length === 0) {
+        roomList.innerHTML = '<li>Nenhum participante na sala.</li>';
+    }
 
     participants.forEach((participant, index) => {
         const listItem = createParticipantListItem(participant, index, true);
@@ -65,6 +67,7 @@ function updateRoom() {
     checkRoomStatus();
 }
 
+
 function createParticipantListItem(participant, index, isMainQueue) {
     const listItem = document.createElement('li');
     listItem.innerText = `${index + 1}. ${participant}`;
@@ -77,11 +80,9 @@ function createParticipantListItem(participant, index, isMainQueue) {
         if (password === adminPassword) {
             if (isMainQueue) {
                 participants = participants.filter(p => p !== participant);
-                socket.send(JSON.stringify({ type: 'REMOVE_PARTICIPANT', name: participant })); // Envia a mensagem de remoção ao servidor
                 moveFromWaitingToMain();
             } else {
                 waitingParticipants = waitingParticipants.filter(p => p !== participant);
-                socket.send(JSON.stringify({ type: 'REMOVE_PARTICIPANT', name: participant })); // Envia a mensagem de remoção ao servidor
             }
             saveParticipants();
             updateRoom();
@@ -142,7 +143,6 @@ enterButton.addEventListener('click', () => {
 
     if (participants.length < maxParticipants) {
         participants.push(nick);
-        socket.send(JSON.stringify({ type: 'ADD_PARTICIPANT', name: nick })); // Envia a mensagem de adição ao servidor
     } else {
         waitingParticipants.push(nick);
     }
@@ -159,7 +159,6 @@ enterButton.addEventListener('click', () => {
 
 exitButton.addEventListener('click', () => {
     if (currentNick !== '') {
-        socket.send(JSON.stringify({ type: 'REMOVE_PARTICIPANT', name: currentNick })); // Envia a mensagem de remoção ao servidor
         participants = participants.filter(p => p !== currentNick);
         waitingParticipants = waitingParticipants.filter(p => p !== currentNick);
         moveFromWaitingToMain();
