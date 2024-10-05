@@ -26,12 +26,18 @@ socket.onopen = () => {
 
 socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+
     console.log('Participantes:', data.participants);
     console.log('Aguardando Participantes:', data.waitingParticipants);
-    participants = data.participants;  // Atualiza a lista de participantes
-    waitingParticipants = data.waitingParticipants; // Atualiza a lista de espera
-    updateRoom(); // Atualiza a interface
+    participants = data.participants;
+    waitingParticipants = data.waitingParticipants;
+    updateRoom();
 };
+
 
 socket.onerror = (error) => {
     console.error('Erro na conexão WebSocket:', error);
@@ -159,6 +165,8 @@ enterButton.addEventListener('click', () => {
 
 exitButton.addEventListener('click', () => {
     if (currentNick !== '') {
+        const confirmation = confirm('Você tem certeza de que deseja sair?');
+        if (!confirmation) return;
         participants = participants.filter(p => p !== currentNick);
         waitingParticipants = waitingParticipants.filter(p => p !== currentNick);
         moveFromWaitingToMain();
