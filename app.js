@@ -17,12 +17,13 @@ let currentNick = localStorage.getItem('userNick') || '';
 // Conectando ao servidor WebSocket
 const socket = new WebSocket(`ws://${window.location.host}/api/websocket`);
 
-
 socket.onopen = () => {
     console.log('Conectado ao servidor WebSocket');
 
     // Enviar um nome de participante como exemplo
-    socket.send(JSON.stringify({ type: 'ADD_PARTICIPANT', name: currentNick }));
+    if (currentNick) {
+        socket.send(JSON.stringify({ type: 'ADD_PARTICIPANT', name: currentNick }));
+    }
 };
 
 socket.onmessage = (event) => {
@@ -76,9 +77,11 @@ function createParticipantListItem(participant, index, isMainQueue) {
         if (password === adminPassword) {
             if (isMainQueue) {
                 participants = participants.filter(p => p !== participant);
+                socket.send(JSON.stringify({ type: 'REMOVE_PARTICIPANT', name: participant })); // Envia a mensagem de remoção ao servidor
                 moveFromWaitingToMain();
             } else {
                 waitingParticipants = waitingParticipants.filter(p => p !== participant);
+                socket.send(JSON.stringify({ type: 'REMOVE_PARTICIPANT', name: participant })); // Envia a mensagem de remoção ao servidor
             }
             saveParticipants();
             updateRoom();
@@ -139,6 +142,7 @@ enterButton.addEventListener('click', () => {
 
     if (participants.length < maxParticipants) {
         participants.push(nick);
+        socket.send(JSON.stringify({ type: 'ADD_PARTICIPANT', name: nick })); // Envia a mensagem de adição ao servidor
     } else {
         waitingParticipants.push(nick);
     }
@@ -155,6 +159,7 @@ enterButton.addEventListener('click', () => {
 
 exitButton.addEventListener('click', () => {
     if (currentNick !== '') {
+        socket.send(JSON.stringify({ type: 'REMOVE_PARTICIPANT', name: currentNick })); // Envia a mensagem de remoção ao servidor
         participants = participants.filter(p => p !== currentNick);
         waitingParticipants = waitingParticipants.filter(p => p !== currentNick);
         moveFromWaitingToMain();

@@ -1,12 +1,12 @@
-// api/websocket.js
 const WebSocket = require('ws');
 
 let participants = [];
 let waitingParticipants = [];
+let wss; // Declare wss aqui para ter acesso na função broadcast
 
 module.exports = (req, res) => {
     if (req.method === 'GET') {
-        const wss = new WebSocket.Server({ noServer: true });
+        wss = new WebSocket.Server({ noServer: true });
 
         res.socket.server.on('upgrade', (request, socket, head) => {
             wss.handleUpgrade(request, socket, head, (ws) => {
