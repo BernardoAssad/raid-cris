@@ -1,5 +1,6 @@
 // api/websocket.js
 const WebSocket = require('ws');
+const cors = require('cors');
 
 let participants = [];
 let waitingParticipants = [];
@@ -11,6 +12,10 @@ app.use(cors({
 }));
 
 module.exports = (req, res) => {
+    // Adicionar cabeçalhos CORS
+    res.setHeader('Access-Control-Allow-Origin', '*'); // ou defina o domínio específico
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+
     if (req.method === 'GET') {
         const wss = new WebSocket.Server({ noServer: true });
 
@@ -48,6 +53,9 @@ module.exports = (req, res) => {
                 });
             });
         });
+    } else {
+        // Se não for um método GET, envie um erro
+        res.status(405).end(); // Método não permitido
     }
 };
 
