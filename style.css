@@ -1,0 +1,117 @@
+body {
+    background-color: #f0f0c9;
+    font-family: 'Press Start 2P', cursive;
+    text-align: center;
+    margin-top: 50px;
+    color: #3b4cca;
+}
+h1 {
+    font-size: 30px;
+    color: #ffcb05;
+    text-shadow: 3px 3px #3b4cca;
+}
+#status {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #3b4cca;
+}
+#nick-input {
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #3b4cca;
+    border-radius: 10px;
+    width: 200px;
+    text-align: center;
+}
+#enter-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #ffcb05;
+    border: none;
+    border-radius: 10px;
+    color: #3b4cca;
+    font-weight: bold;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+#enter-btn:hover {
+    background-color: #f8b915;
+}
+#exit-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #ffcb05;
+    border: none;
+    border-radius: 10px;
+    color: #3b4cca;
+    font-weight: bold;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+#exit-btn:hover {
+    background-color: #f8b915;
+}
+#room-list {
+    margin-top: 30px;
+    list-style-type: none;
+    padding: 0;
+}
+#room-list li {
+    background-color: #3b4cca;
+    color: #ffcb05;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+.pokeball {
+    width: 50px;
+    height: 50px;
+    background: radial-gradient(circle at 50% 50%, white 49%, #ff0000 50%);
+    border: 4px solid black;
+    border-radius: 50%;
+    position: relative;
+    display: inline-block;
+    margin-top: 20px;
+}
+.pokeball:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border: 2px solid black;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+#full-room-names {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #3b4cca;
+    font-weight: bold;
+}
+.hidden {
+    display: none;
+}
+#clear-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #ff0000;
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: bold;
+    margin-top: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    transition: background-color 0.3s;
+}
+#clear-btn:hover {
+    background-color: #cc0000;
+}

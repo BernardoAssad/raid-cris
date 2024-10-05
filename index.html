@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fila de Treinadores Pokémon</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <h1>Fila de Treinadores Pokémon</h1>
+    <div id="status">Sala aberta. Aguarde mais treinadores.</div>
+    
+    <input type="text" id="nick-input" placeholder="Digite seu nick de treinador">
+    <button id="enter-btn">Entrar na Fila</button>
+    <!-- <button id="exit-btn" class="hidden">Sair da Sala</button> -->
+
+    <div class="pokeball"></div>
+
+    <ul id="room-list"></ul>
+    <h3>Fila de Espera</h3>
+    <ul id="waiting-list"></ul>
+
+    <div id="full-room-names" class="hidden"></div>
+
+    <button id="show-names-btn" class="hidden">Mostrar Nomes</button>
+
+    <button id="clear-btn" class="hidden">Limpar Fila</button>
+
+    <script src="app.js"></script>
+</body>
+</html>
