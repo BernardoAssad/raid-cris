@@ -15,7 +15,7 @@ let waitingParticipants = [];
 let currentNick = localStorage.getItem('userNick') || ''; 
 
 // Conectando ao servidor WebSocket
-const socket = new WebSocket('wss://your-websocket-server-url');
+const socket = new WebSocket(`wss://${window.location.host}`);
 
 socket.onopen = () => {
     console.log('Conectado ao servidor WebSocket');
