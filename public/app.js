@@ -21,7 +21,7 @@ function connectEventSource() {
 
     eventSource.onopen = () => {
         console.log('Conexão SSE estabelecida');
-        if (currentNick) {
+        if (currentNick && !participants.includes(currentNick)) {
             console.log('Enviando nick salvo:', currentNick);
             sendAction('JOIN', currentNick);
         }
@@ -154,13 +154,17 @@ enterButton.addEventListener('click', () => {
         return;
     }
 
-    console.log('Enviando solicitação de entrada:', nick);
-    sendAction('JOIN', nick);
-    currentNick = nick;
-    localStorage.setItem('userNick', currentNick);
-    nickInput.value = '';
-    exitButton.classList.remove('hidden');
-    enterButton.classList.add('hidden');
+    if (!participants.includes(nick) && !waitingParticipants.includes(nick)) {
+        console.log('Enviando solicitação de entrada:', nick);
+        sendAction('JOIN', nick);
+        currentNick = nick;
+        localStorage.setItem('userNick', currentNick);
+        nickInput.value = '';
+        exitButton.classList.remove('hidden');
+        enterButton.classList.add('hidden');
+    } else {
+        alert('Você já está na sala ou na fila de espera.');
+    }
 });
 
 exitButton.addEventListener('click', () => {
