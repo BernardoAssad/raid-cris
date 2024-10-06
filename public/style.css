@@ -115,3 +115,19 @@ h1 {
 #clear-btn:hover {
     background-color: #cc0000;
 }
+#show-names-btn {
+    padding: 10px 20px;
+    margin-top: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #3b4cca;
+    border: none;
+    border-radius: 10px;
+    color: #ffcb05;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+#show-names-btn:hover {
+    background-color: #2130a3;
+}
