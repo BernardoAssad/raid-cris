@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const uri = process.env.MONGODB_URI;
+const uri = 'mongodb+srv://raidcrisao:123@raidcris.yomp8.mongodb.net/?retryWrites=true&w=majority&appName=RaidCris';
 const client = new MongoClient(uri);
 
 let db;
