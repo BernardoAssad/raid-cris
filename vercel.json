@@ -8,12 +8,17 @@
     ],
     "routes": [
       {
+        "src": "/api/events",
+        "dest": "server.js"
+      },
+      {
         "src": "/api/(.*)",
         "dest": "server.js"
       },
       {
         "src": "/(.*)",
-        "dest": "server.js"
+        "dest": "/index.html"
       }
     ]
   }
+  
