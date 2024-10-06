@@ -10,13 +10,6 @@ let waitingParticipants = [];
 const maxParticipants = 10;
 let clients = [];
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    next();
-  });  
-
 app.get('/api/events', (req, res) => {
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
