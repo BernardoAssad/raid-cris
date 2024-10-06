@@ -2,10 +2,10 @@ let participants = [];
 let waitingParticipants = [];
 let currentNick = localStorage.getItem('userNick') || '';
 
-const maxParticipants = 10; // Adicione esta linha
-const adminPassword = 'pokeraidcrisao'; // Adicione esta linha
+const maxParticipants = 10;
+const adminPassword = 'pokeraidcrisao';
 
-let eventSource;
+let ws;
 const enterButton = document.getElementById('enter-btn');
 const exitButton = document.getElementById('exit-btn');
 const nickInput = document.getElementById('nick-input');
@@ -16,23 +16,23 @@ const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
 
-function connectEventSource() {
-    eventSource = new EventSource('/api/events');
+function connectWebSocket() {
+    ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
 
-    eventSource.onopen = () => {
-        console.log('Conexão SSE estabelecida');
+    ws.onopen = () => {
+        console.log('WebSocket connection established');
         if (currentNick && !participants.includes(currentNick)) {
-            console.log('Enviando nick salvo:', currentNick);
+            console.log('Sending saved nick:', currentNick);
             sendAction('JOIN', currentNick);
         }
     };
 
-    eventSource.onmessage = (event) => {
-        console.log('Mensagem recebida do servidor:', event.data);
+    ws.onmessage = (event) => {
+        console.log('Message received from server:', event.data);
         const data = JSON.parse(event.data);
         switch(data.type) {
             case 'UPDATE':
-                console.log('Atualizando listas:', data);
+                console.log('Updating lists:', data);
                 participants = data.participants;
                 waitingParticipants = data.waitingParticipants;
                 updateRoom();
@@ -43,17 +43,20 @@ function connectEventSource() {
         }
     };
 
-    eventSource.onerror = (error) => {
-        console.error('Erro na conexão SSE:', error);
-        eventSource.close();
-        setTimeout(connectEventSource, 5000);  // Tenta reconectar após 5 segundos
+    ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setTimeout(connectWebSocket, 5000);  // Try to reconnect after 5 seconds
+    };
+
+    ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
     };
 }
 
-connectEventSource();
+connectWebSocket();
 
 function updateRoom() {
-    console.log('Atualizando sala. Participantes:', participants, 'Aguardando:', waitingParticipants);
+    console.log('Updating room. Participants:', participants, 'Waiting:', waitingParticipants);
     roomList.innerHTML = '';
     waitingList.innerHTML = '';
 
@@ -126,25 +129,12 @@ showNamesButton.addEventListener('click', () => {
 });
 
 function sendAction(type, nick, isMainQueue) {
-    fetch('/api/action', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type, nick, isMainQueue }),
-    }).then(response => {
-        if (!response.ok) {
-            throw new Error('Falha ao enviar ação');
-        }
-        return response.json();
-    }).then(data => {
-        if (data.type === 'ERROR') {
-            alert(data.message);
-        }
-    }).catch(error => {
-        console.error('Erro ao enviar ação:', error);
-        alert('Ocorreu um erro ao enviar a ação. Por favor, tente novamente.');
-    });
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type, nick, isMainQueue }));
+    } else {
+        console.error('WebSocket is not open. Cannot send action.');
+        alert('Não foi possível enviar a ação. Por favor, tente novamente em alguns instantes.');
+    }
 }
 
 enterButton.addEventListener('click', () => {
@@ -155,7 +145,7 @@ enterButton.addEventListener('click', () => {
     }
 
     if (!participants.includes(nick) && !waitingParticipants.includes(nick)) {
-        console.log('Enviando solicitação de entrada:', nick);
+        console.log('Sending entry request:', nick);
         sendAction('JOIN', nick);
         currentNick = nick;
         localStorage.setItem('userNick', currentNick);
@@ -187,10 +177,10 @@ function displayFullRoomNames() {
     fullRoomNames.innerText = 'Participantes: ' + participants.join(', ');
 }
 
-// Inicializa a sala
+// Initialize the room
 updateRoom();
 
-// Verifica se o usuário já está na sala ao carregar a página
+// Check if the user is already in the room when loading the page
 if (currentNick !== '') {
     nickInput.value = currentNick;
     nickInput.disabled = true;
