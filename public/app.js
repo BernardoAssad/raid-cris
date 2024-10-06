@@ -1,7 +1,13 @@
-const maxParticipants = 10;
-const adminPassword = 'pokeraidcrisao'; 
-const exitButton = document.getElementById('exit-btn');
+let participants = [];
+let waitingParticipants = [];
+let currentNick = localStorage.getItem('userNick') || '';
+
+const maxParticipants = 10; // Adicione esta linha
+const adminPassword = 'pokeraidcrisao'; // Adicione esta linha
+
+const eventSource = new EventSource('/api/events');
 const enterButton = document.getElementById('enter-btn');
+const exitButton = document.getElementById('exit-btn');
 const nickInput = document.getElementById('nick-input');
 const roomList = document.getElementById('room-list');
 const waitingList = document.getElementById('waiting-list');
@@ -10,21 +16,15 @@ const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
 
-let participants = [];
-let waitingParticipants = [];
-let currentNick = localStorage.getItem('userNick') || '';
-
-const socket = new WebSocket(`wss://${window.location.host}`);
-
-socket.onopen = () => {
-    console.log('Conectado ao servidor WebSocket');
+eventSource.onopen = () => {
+    console.log('Conexão SSE estabelecida');
     if (currentNick) {
         console.log('Enviando nick salvo:', currentNick);
-        socket.send(JSON.stringify({ type: 'JOIN', nick: currentNick }));
+        sendAction('JOIN', currentNick);
     }
 };
 
-socket.onmessage = (event) => {
+eventSource.onmessage = (event) => {
     console.log('Mensagem recebida do servidor:', event.data);
     const data = JSON.parse(event.data);
     switch(data.type) {
@@ -40,12 +40,8 @@ socket.onmessage = (event) => {
     }
 };
 
-socket.onerror = (error) => {
-    console.error('Erro na conexão WebSocket:', error);
-};
-
-socket.onclose = () => {
-    console.log('Conexão WebSocket encerrada');
+eventSource.onerror = (error) => {
+    console.error('Erro na conexão SSE:', error);
 };
 
 function updateRoom() {
@@ -70,22 +66,6 @@ function updateRoom() {
     checkRoomStatus();
 }
 
-enterButton.addEventListener('click', () => {
-    const nick = nickInput.value.trim();
-    if (nick === "") {
-        alert('Por favor, insira um nick.');
-        return;
-    }
-
-    console.log('Enviando solicitação de entrada:', nick);
-    socket.send(JSON.stringify({ type: 'JOIN', nick: nick }));
-    currentNick = nick;
-    localStorage.setItem('userNick', currentNick);
-    nickInput.value = '';
-    exitButton.classList.remove('hidden');
-    enterButton.classList.add('hidden');
-});
-
 function createParticipantListItem(participant, index, isMainQueue) {
     const listItem = document.createElement('li');
     listItem.innerText = `${index + 1}. ${participant}`;
@@ -96,11 +76,7 @@ function createParticipantListItem(participant, index, isMainQueue) {
     deleteIcon.addEventListener('click', () => {
         const password = prompt('Por favor, insira a senha de administrador para remover este participante:');
         if (password === adminPassword) {
-            socket.send(JSON.stringify({ 
-                type: 'REMOVE', 
-                nick: participant, 
-                isMainQueue: isMainQueue 
-            }));
+            sendAction('REMOVE', participant, isMainQueue);
         } else {
             alert('Senha incorreta! O participante não será removido.');
         }
@@ -125,7 +101,7 @@ clearButton.addEventListener('click', () => {
     const password = prompt('Por favor, insira a senha de administrador para limpar a fila principal:');
     
     if (password === adminPassword) {
-        socket.send(JSON.stringify({ type: 'CLEAR' }));
+        sendAction('CLEAR');
     } else {
         alert('Senha incorreta! A fila não será limpa.');
     }
@@ -141,12 +117,38 @@ showNamesButton.addEventListener('click', () => {
     }
 });
 
+function sendAction(type, nick, isMainQueue) {
+    fetch('/api/action', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type, nick, isMainQueue }),
+    });
+}
+
+enterButton.addEventListener('click', () => {
+    const nick = nickInput.value.trim();
+    if (nick === "") {
+        alert('Por favor, insira um nick.');
+        return;
+    }
+
+    console.log('Enviando solicitação de entrada:', nick);
+    sendAction('JOIN', nick);
+    currentNick = nick;
+    localStorage.setItem('userNick', currentNick);
+    nickInput.value = '';
+    exitButton.classList.remove('hidden');
+    enterButton.classList.add('hidden');
+});
+
 exitButton.addEventListener('click', () => {
     if (currentNick !== '') {
         const confirmation = confirm('Você tem certeza de que deseja sair?');
         if (!confirmation) return;
         
-        socket.send(JSON.stringify({ type: 'LEAVE', nick: currentNick }));
+        sendAction('LEAVE', currentNick);
         localStorage.removeItem('userNick');
         currentNick = '';
 
