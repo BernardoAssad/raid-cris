@@ -26,19 +26,25 @@ connectToDatabase();
 const maxParticipants = 10;
 
 app.get('/api/poll', async (req, res) => {
-  try {
-    const participants = await db.collection('participants').find().toArray();
-    const waitingParticipants = await db.collection('waitingParticipants').find().toArray();
-
-    res.json({
-      participants: participants.map(p => p.nick),
-      waitingParticipants: waitingParticipants.map(p => p.nick)
-    });
-  } catch (error) {
-    console.error('Error in poll endpoint:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+    console.log('API /api/poll chamada');
+    try {
+      console.log('Tentando acessar as coleções...');
+      const participants = await db.collection('participants').find().toArray();
+      const waitingParticipants = await db.collection('waitingParticipants').find().toArray();
+  
+      console.log('Coleções acessadas com sucesso!');
+      console.log('Participants:', participants);
+      console.log('Waiting participants:', waitingParticipants);
+  
+      res.json({
+        participants: participants.map(p => p.nick),
+        waitingParticipants: waitingParticipants.map(p => p.nick)
+      });
+    } catch (error) {
+      console.error('Error in poll endpoint:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
 app.post('/api/action', async (req, res) => {
   const { type, nick, isMainQueue } = req.body;
