@@ -2,9 +2,10 @@ let participants = [];
 let waitingParticipants = [];
 let currentNick = localStorage.getItem('userNick') || '';
 
-const maxParticipants = 10;
-const adminPassword = 'pokeraidcrisao';
+const maxParticipants = 10; // Adicione esta linha
+const adminPassword = 'pokeraidcrisao'; // Adicione esta linha
 
+let eventSource;
 const enterButton = document.getElementById('enter-btn');
 const exitButton = document.getElementById('exit-btn');
 const nickInput = document.getElementById('nick-input');
@@ -15,28 +16,44 @@ const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
 
-function startPolling() {
-    pollServer();
-    setInterval(pollServer, 5000); // Poll every 5 seconds
+function connectEventSource() {
+    eventSource = new EventSource('/api/events');
+
+    eventSource.onopen = () => {
+        console.log('Conexão SSE estabelecida');
+        if (currentNick) {
+            console.log('Enviando nick salvo:', currentNick);
+            sendAction('JOIN', currentNick);
+        }
+    };
+
+    eventSource.onmessage = (event) => {
+        console.log('Mensagem recebida do servidor:', event.data);
+        const data = JSON.parse(event.data);
+        switch(data.type) {
+            case 'UPDATE':
+                console.log('Atualizando listas:', data);
+                participants = data.participants;
+                waitingParticipants = data.waitingParticipants;
+                updateRoom();
+                break;
+            case 'ERROR':
+                alert(data.message);
+                break;
+        }
+    };
+
+    eventSource.onerror = (error) => {
+        console.error('Erro na conexão SSE:', error);
+        eventSource.close();
+        setTimeout(connectEventSource, 5000);  // Tenta reconectar após 5 segundos
+    };
 }
 
-async function pollServer() {
-    try {
-        const response = await fetch('/api/poll');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        participants = data.participants;
-        waitingParticipants = data.waitingParticipants;
-        updateRoom();
-    } catch (error) {
-        console.error('Polling error:', error);
-    }
-}
+connectEventSource();
 
 function updateRoom() {
-    console.log('Updating room. Participants:', participants, 'Waiting:', waitingParticipants);
+    console.log('Atualizando sala. Participantes:', participants, 'Aguardando:', waitingParticipants);
     roomList.innerHTML = '';
     waitingList.innerHTML = '';
 
@@ -108,31 +125,26 @@ showNamesButton.addEventListener('click', () => {
     }
 });
 
-async function sendAction(type, nick, isMainQueue) {
-    try {
-        const response = await fetch('/api/action', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ type, nick, isMainQueue }),
-        });
-
+function sendAction(type, nick, isMainQueue) {
+    fetch('/api/action', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type, nick, isMainQueue }),
+    }).then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('Falha ao enviar ação');
         }
-
-        const data = await response.json();
-
-        if (data.error) {
-            alert(data.error);
-        } else {
-            pollServer(); // Immediately poll for updates after an action
+        return response.json();
+    }).then(data => {
+        if (data.type === 'ERROR') {
+            alert(data.message);
         }
-    } catch (error) {
-        console.error('Error sending action:', error);
-        alert('Não foi possível enviar a ação. Por favor, tente novamente em alguns instantes.');
-    }
+    }).catch(error => {
+        console.error('Erro ao enviar ação:', error);
+        alert('Ocorreu um erro ao enviar a ação. Por favor, tente novamente.');
+    });
 }
 
 enterButton.addEventListener('click', () => {
@@ -142,17 +154,13 @@ enterButton.addEventListener('click', () => {
         return;
     }
 
-    if (!participants.includes(nick) && !waitingParticipants.includes(nick)) {
-        console.log('Sending entry request:', nick);
-        sendAction('JOIN', nick);
-        currentNick = nick;
-        localStorage.setItem('userNick', currentNick);
-        nickInput.value = '';
-        exitButton.classList.remove('hidden');
-        enterButton.classList.add('hidden');
-    } else {
-        alert('Você já está na sala ou na fila de espera.');
-    }
+    console.log('Enviando solicitação de entrada:', nick);
+    sendAction('JOIN', nick);
+    currentNick = nick;
+    localStorage.setItem('userNick', currentNick);
+    nickInput.value = '';
+    exitButton.classList.remove('hidden');
+    enterButton.classList.add('hidden');
 });
 
 exitButton.addEventListener('click', () => {
@@ -175,10 +183,10 @@ function displayFullRoomNames() {
     fullRoomNames.innerText = 'Participantes: ' + participants.join(', ');
 }
 
-// Initialize the room and start polling
-startPolling();
+// Inicializa a sala
+updateRoom();
 
-// Check if the user is already in the room when loading the page
+// Verifica se o usuário já está na sala ao carregar a página
 if (currentNick !== '') {
     nickInput.value = currentNick;
     nickInput.disabled = true;
