@@ -1,13 +1,8 @@
 const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
 const path = require('path');
 const { MongoClient } = require('mongodb');
 
 const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -30,36 +25,46 @@ connectToDatabase();
 
 const maxParticipants = 10;
 
-wss.on('connection', (ws) => {
-  console.log('New WebSocket connection');
+app.get('/api/poll', async (req, res) => {
+  try {
+    const participants = await db.collection('participants').find().toArray();
+    const waitingParticipants = await db.collection('waitingParticipants').find().toArray();
 
-  ws.on('message', async (message) => {
-    const data = JSON.parse(message);
-    console.log('Received:', data);
+    res.json({
+      participants: participants.map(p => p.nick),
+      waitingParticipants: waitingParticipants.map(p => p.nick)
+    });
+  } catch (error) {
+    console.error('Error in poll endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
-    switch (data.type) {
+app.post('/api/action', async (req, res) => {
+  const { type, nick, isMainQueue } = req.body;
+  console.log('Action received:', type, nick);
+
+  try {
+    switch(type) {
       case 'JOIN':
-        await handleJoin(data.nick);
+        await handleJoin(nick);
         break;
       case 'LEAVE':
-        await handleLeave(data.nick);
+        await handleLeave(nick);
         break;
       case 'REMOVE':
-        await handleRemove(data.nick, data.isMainQueue);
+        await handleRemove(nick, isMainQueue);
         break;
       case 'CLEAR':
         await handleClear();
         break;
     }
 
-    broadcastUpdate();
-  });
-
-  ws.on('close', () => {
-    console.log('WebSocket connection closed');
-  });
-
-  sendUpdate(ws);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error in action endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 async function handleJoin(nick) {
@@ -67,7 +72,7 @@ async function handleJoin(nick) {
   const waitingParticipants = await db.collection('waitingParticipants').find().toArray();
 
   if (participants.some(p => p.nick === nick) || waitingParticipants.some(p => p.nick === nick)) {
-    return { type: 'ERROR', message: 'Este nick já está na fila. Por favor, escolha outro.' };
+    throw new Error('Este nick já está na fila. Por favor, escolha outro.');
   }
 
   if (participants.length < maxParticipants) {
@@ -108,38 +113,8 @@ async function moveFromWaitingToMain() {
   }
 }
 
-async function sendUpdate(ws) {
-  const participants = await db.collection('participants').find().toArray();
-  const waitingParticipants = await db.collection('waitingParticipants').find().toArray();
-
-  const data = JSON.stringify({
-    type: 'UPDATE',
-    participants: participants.map(p => p.nick),
-    waitingParticipants: waitingParticipants.map(p => p.nick)
-  });
-
-  ws.send(data);
-}
-
-async function broadcastUpdate() {
-  const participants = await db.collection('participants').find().toArray();
-  const waitingParticipants = await db.collection('waitingParticipants').find().toArray();
-
-  const data = JSON.stringify({
-    type: 'UPDATE',
-    participants: participants.map(p => p.nick),
-    waitingParticipants: waitingParticipants.map(p => p.nick)
-  });
-
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(data);
-    }
-  });
-}
-
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 

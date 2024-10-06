@@ -5,7 +5,6 @@ let currentNick = localStorage.getItem('userNick') || '';
 const maxParticipants = 10;
 const adminPassword = 'pokeraidcrisao';
 
-let ws;
 const enterButton = document.getElementById('enter-btn');
 const exitButton = document.getElementById('exit-btn');
 const nickInput = document.getElementById('nick-input');
@@ -16,44 +15,25 @@ const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
 
-function connectWebSocket() {
-    ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
-
-    ws.onopen = () => {
-        console.log('WebSocket connection established');
-        if (currentNick && !participants.includes(currentNick)) {
-            console.log('Sending saved nick:', currentNick);
-            sendAction('JOIN', currentNick);
-        }
-    };
-
-    ws.onmessage = (event) => {
-        console.log('Message received from server:', event.data);
-        const data = JSON.parse(event.data);
-        switch(data.type) {
-            case 'UPDATE':
-                console.log('Updating lists:', data);
-                participants = data.participants;
-                waitingParticipants = data.waitingParticipants;
-                updateRoom();
-                break;
-            case 'ERROR':
-                alert(data.message);
-                break;
-        }
-    };
-
-    ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        setTimeout(connectWebSocket, 5000);  // Try to reconnect after 5 seconds
-    };
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-    };
+function startPolling() {
+    pollServer();
+    setInterval(pollServer, 5000); // Poll every 5 seconds
 }
 
-connectWebSocket();
+async function pollServer() {
+    try {
+        const response = await fetch('/api/poll');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        participants = data.participants;
+        waitingParticipants = data.waitingParticipants;
+        updateRoom();
+    } catch (error) {
+        console.error('Polling error:', error);
+    }
+}
 
 function updateRoom() {
     console.log('Updating room. Participants:', participants, 'Waiting:', waitingParticipants);
@@ -128,11 +108,29 @@ showNamesButton.addEventListener('click', () => {
     }
 });
 
-function sendAction(type, nick, isMainQueue) {
-    if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type, nick, isMainQueue }));
-    } else {
-        console.error('WebSocket is not open. Cannot send action.');
+async function sendAction(type, nick, isMainQueue) {
+    try {
+        const response = await fetch('/api/action', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ type, nick, isMainQueue }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+        } else {
+            pollServer(); // Immediately poll for updates after an action
+        }
+    } catch (error) {
+        console.error('Error sending action:', error);
         alert('Não foi possível enviar a ação. Por favor, tente novamente em alguns instantes.');
     }
 }
@@ -177,8 +175,8 @@ function displayFullRoomNames() {
     fullRoomNames.innerText = 'Participantes: ' + participants.join(', ');
 }
 
-// Initialize the room
-updateRoom();
+// Initialize the room and start polling
+startPolling();
 
 // Check if the user is already in the room when loading the page
 if (currentNick !== '') {
