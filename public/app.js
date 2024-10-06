@@ -44,8 +44,6 @@ eventSource.onerror = (error) => {
     console.error('Erro na conexão SSE:', error);
 };
 
-let eventSource;
-
 function connectEventSource() {
     eventSource = new EventSource('/api/events');
 
