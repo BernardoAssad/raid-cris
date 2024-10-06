@@ -10,35 +10,33 @@ const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
 
-let participants = JSON.parse(localStorage.getItem('participants')) || [];
-let waitingParticipants = JSON.parse(localStorage.getItem('waitingParticipants')) || [];
+let participants = [];
+let waitingParticipants = [];
 let currentNick = localStorage.getItem('userNick') || ''; 
 
 // Conectando ao servidor WebSocket
-// const socket = new WebSocket(`wss://${window.location.host}/api/websocket`);
-const socket = new WebSocket('wss://raid-cris.vercel.app/api/websocket');
+const socket = new WebSocket('wss://your-websocket-server-url');
 
 socket.onopen = () => {
     console.log('Conectado ao servidor WebSocket');
-
-    // Enviar um nome de participante como exemplo
-    socket.send(JSON.stringify({ type: 'ADD_PARTICIPANT', name: currentNick }));
+    if (currentNick) {
+        socket.send(JSON.stringify({ type: 'JOIN', nick: currentNick }));
+    }
 };
 
 socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    if (data.error) {
-        alert(data.error);
-        return;
+    switch(data.type) {
+        case 'UPDATE':
+            participants = data.participants;
+            waitingParticipants = data.waitingParticipants;
+            updateRoom();
+            break;
+        case 'ERROR':
+            alert(data.message);
+            break;
     }
-
-    console.log('Participantes:', data.participants);
-    console.log('Aguardando Participantes:', data.waitingParticipants);
-    participants = data.participants;
-    waitingParticipants = data.waitingParticipants;
-    updateRoom();
 };
-
 
 socket.onerror = (error) => {
     console.error('Erro na conexão WebSocket:', error);
@@ -47,11 +45,6 @@ socket.onerror = (error) => {
 socket.onclose = () => {
     console.log('Conexão WebSocket encerrada');
 };
-
-function saveParticipants() {
-    localStorage.setItem('participants', JSON.stringify(participants));
-    localStorage.setItem('waitingParticipants', JSON.stringify(waitingParticipants));
-}
 
 function updateRoom() {
     roomList.innerHTML = '';
@@ -74,7 +67,6 @@ function updateRoom() {
     checkRoomStatus();
 }
 
-
 function createParticipantListItem(participant, index, isMainQueue) {
     const listItem = document.createElement('li');
     listItem.innerText = `${index + 1}. ${participant}`;
@@ -85,14 +77,11 @@ function createParticipantListItem(participant, index, isMainQueue) {
     deleteIcon.addEventListener('click', () => {
         const password = prompt('Por favor, insira a senha de administrador para remover este participante:');
         if (password === adminPassword) {
-            if (isMainQueue) {
-                participants = participants.filter(p => p !== participant);
-                moveFromWaitingToMain();
-            } else {
-                waitingParticipants = waitingParticipants.filter(p => p !== participant);
-            }
-            saveParticipants();
-            updateRoom();
+            socket.send(JSON.stringify({ 
+                type: 'REMOVE', 
+                nick: participant, 
+                isMainQueue: isMainQueue 
+            }));
         } else {
             alert('Senha incorreta! O participante não será removido.');
         }
@@ -117,10 +106,7 @@ clearButton.addEventListener('click', () => {
     const password = prompt('Por favor, insira a senha de administrador para limpar a fila principal:');
     
     if (password === adminPassword) {
-        participants = [];
-        moveFromWaitingToMain();
-        saveParticipants();
-        updateRoom();
+        socket.send(JSON.stringify({ type: 'CLEAR' }));
     } else {
         alert('Senha incorreta! A fila não será limpa.');
     }
@@ -143,23 +129,10 @@ enterButton.addEventListener('click', () => {
         return;
     }
 
-    if (participants.includes(nick) || waitingParticipants.includes(nick)) {
-        alert('Este nick já está na fila. Por favor, escolha outro.');
-        return;
-    }
-
-    if (participants.length < maxParticipants) {
-        participants.push(nick);
-    } else {
-        waitingParticipants.push(nick);
-    }
-
-    saveParticipants();
-    currentNick = nick; 
+    socket.send(JSON.stringify({ type: 'JOIN', nick: nick }));
+    currentNick = nick;
     localStorage.setItem('userNick', currentNick);
-    updateRoom();
-
-    nickInput.value = ''; 
+    nickInput.value = '';
     exitButton.classList.remove('hidden');
     enterButton.classList.add('hidden');
 });
@@ -168,25 +141,16 @@ exitButton.addEventListener('click', () => {
     if (currentNick !== '') {
         const confirmation = confirm('Você tem certeza de que deseja sair?');
         if (!confirmation) return;
-        participants = participants.filter(p => p !== currentNick);
-        waitingParticipants = waitingParticipants.filter(p => p !== currentNick);
-        moveFromWaitingToMain();
-        saveParticipants();
-        localStorage.removeItem('userNick'); 
-        currentNick = ''; 
-        updateRoom(); 
+        
+        socket.send(JSON.stringify({ type: 'LEAVE', nick: currentNick }));
+        localStorage.removeItem('userNick');
+        currentNick = '';
 
         exitButton.classList.add('hidden');
         enterButton.classList.remove('hidden');
-        nickInput.disabled = false; 
+        nickInput.disabled = false;
     }
 });
-
-function moveFromWaitingToMain() {
-    while (participants.length < maxParticipants && waitingParticipants.length > 0) {
-        participants.push(waitingParticipants.shift());
-    }
-}
 
 function displayFullRoomNames() {
     fullRoomNames.classList.remove('hidden');
