@@ -11,6 +11,7 @@ const maxParticipants = 10;
 let clients = [];
 
 app.get('/api/events', (req, res) => {
+    console.log('Nova conexão SSE recebida');
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -25,8 +26,20 @@ app.get('/api/events', (req, res) => {
     clients.push(newClient);
 
     req.on('close', () => {
-        console.log(`${clientId} Connection closed`);
+        console.log(`${clientId} Conexão fechada`);
         clients = clients.filter(client => client.id !== clientId);
+    });
+
+    // Envie um evento inicial para garantir que a conexão está aberta
+    res.write(':\n\n');
+
+    // Mantenha a conexão viva
+    const keepAlive = setInterval(() => {
+        res.write(':\n\n');
+    }, 20000);
+
+    req.on('close', () => {
+        clearInterval(keepAlive);
     });
 
     sendUpdate(res);
@@ -76,19 +89,30 @@ function moveFromWaitingToMain() {
 }
 
 function sendUpdate(res) {
-    res.write(`data: ${JSON.stringify({
+    const data = JSON.stringify({
         type: 'UPDATE',
         participants: participants,
         waitingParticipants: waitingParticipants
-    })}\n\n`);
+    });
+    res.write(`data: ${data}\n\n`);
 }
+
 
 function broadcastUpdate() {
     console.log('Enviando atualização para todos os clientes');
-    clients.forEach(client => sendUpdate(client.res));
+    const data = JSON.stringify({
+        type: 'UPDATE',
+        participants: participants,
+        waitingParticipants: waitingParticipants
+    });
+    clients.forEach(client => {
+        client.res.write(`data: ${data}\n\n`);
+    });
 }
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+module.exports = app; 

@@ -9,12 +9,19 @@
     "routes": [
       {
         "src": "/api/events",
-        "dest": "server.js"
+        "dest": "server.js",
+        "headers": {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Connection": "keep-alive"
+        }
       },
       {
         "src": "/api/(.*)",
         "dest": "server.js"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "public/$1"
       }
     ]
   }
-  

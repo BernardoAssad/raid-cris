@@ -44,6 +44,44 @@ eventSource.onerror = (error) => {
     console.error('Erro na conexão SSE:', error);
 };
 
+let eventSource;
+
+function connectEventSource() {
+    eventSource = new EventSource('/api/events');
+
+    eventSource.onopen = () => {
+        console.log('Conexão SSE estabelecida');
+        if (currentNick) {
+            console.log('Enviando nick salvo:', currentNick);
+            sendAction('JOIN', currentNick);
+        }
+    };
+
+    eventSource.onmessage = (event) => {
+        console.log('Mensagem recebida do servidor:', event.data);
+        const data = JSON.parse(event.data);
+        switch(data.type) {
+            case 'UPDATE':
+                console.log('Atualizando listas:', data);
+                participants = data.participants;
+                waitingParticipants = data.waitingParticipants;
+                updateRoom();
+                break;
+            case 'ERROR':
+                alert(data.message);
+                break;
+        }
+    };
+
+    eventSource.onerror = (error) => {
+        console.error('Erro na conexão SSE:', error);
+        eventSource.close();
+        setTimeout(connectEventSource, 5000);  // Tenta reconectar após 5 segundos
+    };
+}
+
+connectEventSource();
+
 function updateRoom() {
     console.log('Atualizando sala. Participantes:', participants, 'Aguardando:', waitingParticipants);
     roomList.innerHTML = '';
@@ -124,6 +162,18 @@ function sendAction(type, nick, isMainQueue) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ type, nick, isMainQueue }),
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Falha ao enviar ação');
+        }
+        return response.json();
+    }).then(data => {
+        if (data.type === 'ERROR') {
+            alert(data.message);
+        }
+    }).catch(error => {
+        console.error('Erro ao enviar ação:', error);
+        alert('Ocorreu um erro ao enviar a ação. Por favor, tente novamente.');
     });
 }
 
