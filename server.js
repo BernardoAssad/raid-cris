@@ -9,17 +9,34 @@ app.use(express.static(path.join(__dirname, 'public')));
 const uri = 'mongodb+srv://raidcrisao:123@raidcris.yomp8.mongodb.net/?retryWrites=true&w=majority&appName=RaidCris';
 const client = new MongoClient(uri);
 
-let db;
-
-async function connectToDatabase() {
-  try {
-    await client.connect();
-    db = client.db('raidmanager');
-    console.log('Connected to MongoDB');
-  } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
+async function getDb() {
+    if (!db) {
+      try {
+        await client.connect();
+        db = client.db('raidmanager');
+        console.log('Connected to MongoDB');
+      } catch (error) {
+        console.error('Failed to connect to MongoDB:', error);
+      }
+    }
+    return db;
   }
-}
+  
+  app.get('/api/poll', async (req, res) => {
+    try {
+      const db = await getDb();
+      const participants = await db.collection('participants').find().toArray();
+      const waitingParticipants = await db.collection('waitingParticipants').find().toArray();
+  
+      res.json({
+        participants: participants.map(p => p.nick),
+        waitingParticipants: waitingParticipants.map(p => p.nick)
+      });
+    } catch (error) {
+      console.error('Error in poll endpoint:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
 connectToDatabase();
 
