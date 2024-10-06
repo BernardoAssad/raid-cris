@@ -1,27 +1,33 @@
+const express = require('express');
+const http = require('http');
 const WebSocket = require('ws');
-const server = new WebSocket.Server({ port: 8080 });
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 let participants = [];
 let waitingParticipants = [];
 const maxParticipants = 10;
 
-server.on('connection', (socket) => {
-    console.log('New client connected');
+wss.on('connection', (ws) => {
+    console.log('Novo cliente conectado');
 
-    // Send current state to the new client
-    socket.send(JSON.stringify({
-        type: 'UPDATE',
-        participants: participants,
-        waitingParticipants: waitingParticipants
-    }));
+    // Envia o estado atual para o novo cliente
+    sendUpdate(ws);
 
-    socket.on('message', (message) => {
+    ws.on('message', (message) => {
+        console.log('Mensagem recebida:', message);
         const data = JSON.parse(message);
 
         switch(data.type) {
             case 'JOIN':
+                console.log('Solicitação de entrada:', data.nick);
                 if (participants.includes(data.nick) || waitingParticipants.includes(data.nick)) {
-                    socket.send(JSON.stringify({
+                    ws.send(JSON.stringify({
                         type: 'ERROR',
                         message: 'Este nick já está na fila. Por favor, escolha outro.'
                     }));
@@ -50,12 +56,8 @@ server.on('connection', (socket) => {
                 break;
         }
 
-        // Broadcast updated state to all clients
-        broadcast({
-            type: 'UPDATE',
-            participants: participants,
-            waitingParticipants: waitingParticipants
-        });
+        // Envia atualização para todos os clientes
+        broadcastUpdate();
     });
 });
 
@@ -65,12 +67,24 @@ function moveFromWaitingToMain() {
     }
 }
 
-function broadcast(message) {
-    server.clients.forEach(client => {
+function sendUpdate(ws) {
+    ws.send(JSON.stringify({
+        type: 'UPDATE',
+        participants: participants,
+        waitingParticipants: waitingParticipants
+    }));
+}
+
+function broadcastUpdate() {
+    console.log('Enviando atualização para todos os clientes');
+    wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(message));
+            sendUpdate(client);
         }
     });
 }
 
-console.log('WebSocket server is running on port 8080');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});

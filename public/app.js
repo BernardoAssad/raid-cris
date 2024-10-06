@@ -12,22 +12,24 @@ const showNamesButton = document.getElementById('show-names-btn');
 
 let participants = [];
 let waitingParticipants = [];
-let currentNick = localStorage.getItem('userNick') || ''; 
+let currentNick = localStorage.getItem('userNick') || '';
 
-// Conectando ao servidor WebSocket
 const socket = new WebSocket(`wss://${window.location.host}`);
 
 socket.onopen = () => {
     console.log('Conectado ao servidor WebSocket');
     if (currentNick) {
+        console.log('Enviando nick salvo:', currentNick);
         socket.send(JSON.stringify({ type: 'JOIN', nick: currentNick }));
     }
 };
 
 socket.onmessage = (event) => {
+    console.log('Mensagem recebida do servidor:', event.data);
     const data = JSON.parse(event.data);
     switch(data.type) {
         case 'UPDATE':
+            console.log('Atualizando listas:', data);
             participants = data.participants;
             waitingParticipants = data.waitingParticipants;
             updateRoom();
@@ -47,6 +49,7 @@ socket.onclose = () => {
 };
 
 function updateRoom() {
+    console.log('Atualizando sala. Participantes:', participants, 'Aguardando:', waitingParticipants);
     roomList.innerHTML = '';
     waitingList.innerHTML = '';
 
@@ -66,6 +69,22 @@ function updateRoom() {
 
     checkRoomStatus();
 }
+
+enterButton.addEventListener('click', () => {
+    const nick = nickInput.value.trim();
+    if (nick === "") {
+        alert('Por favor, insira um nick.');
+        return;
+    }
+
+    console.log('Enviando solicitação de entrada:', nick);
+    socket.send(JSON.stringify({ type: 'JOIN', nick: nick }));
+    currentNick = nick;
+    localStorage.setItem('userNick', currentNick);
+    nickInput.value = '';
+    exitButton.classList.remove('hidden');
+    enterButton.classList.add('hidden');
+});
 
 function createParticipantListItem(participant, index, isMainQueue) {
     const listItem = document.createElement('li');
@@ -120,21 +139,6 @@ showNamesButton.addEventListener('click', () => {
     } else {
         alert('Senha incorreta! Os nomes não serão exibidos.');
     }
-});
-
-enterButton.addEventListener('click', () => {
-    const nick = nickInput.value.trim();
-    if (nick === "") {
-        alert('Por favor, insira um nick.');
-        return;
-    }
-
-    socket.send(JSON.stringify({ type: 'JOIN', nick: nick }));
-    currentNick = nick;
-    localStorage.setItem('userNick', currentNick);
-    nickInput.value = '';
-    exitButton.classList.remove('hidden');
-    enterButton.classList.add('hidden');
 });
 
 exitButton.addEventListener('click', () => {
