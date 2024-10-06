@@ -38,6 +38,17 @@ async function getDb() {
     }
   });
 
+async function connectToDatabase() {
+    try {
+        await client.connect();
+        db = client.db('raidmanager');
+        console.log('Connected to MongoDB');
+    } catch (error) {
+        console.error('Failed to connect to MongoDB:', error);
+    }
+}
+  
+
 connectToDatabase();
 
 const maxParticipants = 10;
