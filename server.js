@@ -132,4 +132,7 @@ async function main() {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     });
 }
+
+main();
+
 module.exports = app;
