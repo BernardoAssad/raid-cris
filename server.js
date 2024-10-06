@@ -106,7 +106,11 @@ function broadcastUpdate() {
         waitingParticipants: waitingParticipants
     });
     clients.forEach(client => {
-        client.res.write(`data: ${data}\n\n`);
+        try {
+            client.res.write(`data: ${data}\n\n`);
+        } catch (error) {
+            console.error('Erro ao enviar atualização para um cliente:', error);
+        }
     });
 }
 

@@ -5,7 +5,7 @@ let currentNick = localStorage.getItem('userNick') || '';
 const maxParticipants = 10; // Adicione esta linha
 const adminPassword = 'pokeraidcrisao'; // Adicione esta linha
 
-const eventSource = new EventSource('/api/events');
+let eventSource;
 const enterButton = document.getElementById('enter-btn');
 const exitButton = document.getElementById('exit-btn');
 const nickInput = document.getElementById('nick-input');
