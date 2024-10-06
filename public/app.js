@@ -109,11 +109,15 @@ clearButton.addEventListener('click', () => {
     const password = prompt('Por favor, insira a senha de administrador para limpar a fila principal:');
     
     if (password === adminPassword) {
-        sendAction('CLEAR');
+        sendAction('CLEAR').then(() => {
+            // Atualiza a sala após a limpeza
+            updateRoom();
+        });
     } else {
         alert('Senha incorreta! A fila não será limpa.');
     }
 });
+
 
 showNamesButton.addEventListener('click', () => {
     const password = prompt('Por favor, insira a senha de administrador para mostrar os nomes:');
