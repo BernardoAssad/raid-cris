@@ -141,7 +141,7 @@ function checkRoomStatus() {
 }
 
 function clearQueue() {
-    createPasswordInput((password) => {
+    openPasswordModal((password) => {
         if (password === adminPassword) {
             sendAction('CLEAR').then(() => {
                 updateRoom();
@@ -153,7 +153,7 @@ function clearQueue() {
 }
 
 function showNames() {
-    createPasswordInput((password) => {
+    openPasswordModal((password) => {
         if (password === adminPassword) {
             displayFullRoomNames();
         } else {
@@ -213,6 +213,7 @@ exitButton.addEventListener('click', () => {
         nickInput.disabled = false;
     }
 });
+
 function displayFullRoomNames() {
     // Exibe a lista de participantes
     const fullRoomNames = document.getElementById('full-room-names');
@@ -263,13 +264,8 @@ function fallbackCopyTextToClipboard(text) {
         const msg = successful ? 'Nomes copiados para a área de transferência!' : 'Falha ao copiar os nomes.';
         alert(msg);
     } catch (err) {
-        console.error('Fallback: Erro ao copiar', err);
-        alert('Erro ao copiar os nomes. Por favor, copie manualmente.');
+        console.error('Erro ao copiar texto: ', err);
     }
 
     document.body.removeChild(textArea);
 }
-
-// Atualize as chamadas das funções removeParticipant, clearQueue e showNames
-clearButton.addEventListener('click', clearQueue);
-showNamesButton.addEventListener('click', showNames);
