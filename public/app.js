@@ -58,27 +58,6 @@ function connectEventSource() {
 
 connectEventSource();
 
-function createPasswordInput(callback) {
-    const passwordDiv = document.createElement('div');
-    
-    const passwordInput = document.createElement('input');
-    passwordInput.type = 'password'; // Define o tipo como 'password'
-    passwordInput.placeholder = 'Digite a senha de administrador';
-    
-    const submitButton = document.createElement('button');
-    submitButton.innerText = 'OK';
-    
-    submitButton.addEventListener('click', () => {
-        const password = passwordInput.value;
-        callback(password);
-        document.body.removeChild(passwordDiv); // Remove o campo após o envio
-    });
-    
-    passwordDiv.appendChild(passwordInput);
-    passwordDiv.appendChild(submitButton);
-    document.body.appendChild(passwordDiv); // Adiciona o campo ao corpo da página
-}
-
 function updateRoom() {
     roomList.innerHTML = '';
     waitingList.innerHTML = '';
@@ -109,7 +88,7 @@ function createParticipantListItem(participant, index, isMainQueue) {
     deleteIcon.style.cursor = 'pointer';
     
     deleteIcon.addEventListener('click', () => {
-        createPasswordInput((password) => {
+        openPasswordModal((password) => {
             if (password === adminPassword) {
                 sendAction('REMOVE', participant, isMainQueue);
             } else {
@@ -120,6 +99,34 @@ function createParticipantListItem(participant, index, isMainQueue) {
 
     listItem.appendChild(deleteIcon);
     return listItem;
+}
+
+function openPasswordModal(callback) {
+    const modal = document.getElementById('password-modal');
+    const closeButton = document.getElementById('close-modal');
+    const passwordInput = document.getElementById('admin-password-input');
+    const submitButton = document.getElementById('submit-password');
+
+    modal.classList.remove('hidden');
+
+    closeButton.onclick = () => {
+        modal.classList.add('hidden');
+        passwordInput.value = '';
+    };
+
+    submitButton.onclick = () => {
+        const password = passwordInput.value;
+        modal.classList.add('hidden');
+        passwordInput.value = '';
+        callback(password);
+    };
+
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            modal.classList.add('hidden');
+            passwordInput.value = '';
+        }
+    };
 }
 
 function checkRoomStatus() {
