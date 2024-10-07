@@ -213,7 +213,6 @@ exitButton.addEventListener('click', () => {
         nickInput.disabled = false;
     }
 });
-
 function displayFullRoomNames() {
     // Exibe a lista de participantes
     const fullRoomNames = document.getElementById('full-room-names');
@@ -264,8 +263,13 @@ function fallbackCopyTextToClipboard(text) {
         const msg = successful ? 'Nomes copiados para a área de transferência!' : 'Falha ao copiar os nomes.';
         alert(msg);
     } catch (err) {
-        console.error('Erro ao copiar texto: ', err);
+        console.error('Fallback: Erro ao copiar', err);
+        alert('Erro ao copiar os nomes. Por favor, copie manualmente.');
     }
 
     document.body.removeChild(textArea);
 }
+
+// Atualize as chamadas das funções removeParticipant, clearQueue e showNames
+clearButton.addEventListener('click', clearQueue);
+showNamesButton.addEventListener('click', showNames);
