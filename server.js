@@ -11,7 +11,7 @@ const maxParticipants = 10;
 let clients = [];
 
 app.get('/api/events', (req, res) => {
-    console.log('Nova conexão SSE recebida');
+    // console.log('Nova conexão SSE recebida');
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -26,7 +26,7 @@ app.get('/api/events', (req, res) => {
     clients.push(newClient);
 
     req.on('close', () => {
-        console.log(`${clientId} Conexão fechada`);
+        // console.log(`${clientId} Conexão fechada`);
         clients = clients.filter(client => client.id !== clientId);
     });
 
@@ -47,7 +47,7 @@ app.get('/api/events', (req, res) => {
 
 app.post('/api/action', (req, res) => {
     const { type, nick } = req.body;
-    console.log('Ação recebida:', type, nick);
+    // console.log('Ação recebida:', type, nick);
 
     switch(type) {
         case 'JOIN':
@@ -99,7 +99,7 @@ function sendUpdate(res) {
 
 
 function broadcastUpdate() {
-    console.log('Enviando atualização para todos os clientes');
+    // console.log('Enviando atualização para todos os clientes');
     const data = JSON.stringify({
         type: 'UPDATE',
         participants: participants,
@@ -114,10 +114,10 @@ function broadcastUpdate() {
     });
 }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//     console.log(`Servidor rodando na porta ${PORT}`);
+// });
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));

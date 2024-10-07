@@ -21,19 +21,15 @@ function connectEventSource() {
     eventSource = new EventSource('/api/events');
 
     eventSource.onopen = () => {
-        console.log('Conexão SSE estabelecida');
         if (currentNick) {
-            console.log('Enviando nick salvo:', currentNick);
             sendAction('JOIN', currentNick);
         }
     };
 
     eventSource.onmessage = (event) => {
-        console.log('Mensagem recebida do servidor:', event.data);
         const data = JSON.parse(event.data);
         switch(data.type) {
             case 'UPDATE':
-                console.log('Atualizando listas:', data);
                 participants = data.participants;
                 waitingParticipants = data.waitingParticipants;
                 updateRoom();
@@ -45,7 +41,6 @@ function connectEventSource() {
     };
 
     eventSource.onerror = (error) => {
-        console.error('Erro na conexão SSE:', error);
         eventSource.close();
         setTimeout(connectEventSource, 5000);  // Tenta reconectar após 5 segundos
     };
@@ -54,7 +49,6 @@ function connectEventSource() {
 connectEventSource();
 
 function updateRoom() {
-    console.log('Atualizando sala. Participantes:', participants, 'Aguardando:', waitingParticipants);
     roomList.innerHTML = '';
     waitingList.innerHTML = '';
 
@@ -160,7 +154,6 @@ enterButton.addEventListener('click', () => {
         return;
     }
 
-    console.log('Enviando solicitação de entrada:', nick);
     sendAction('JOIN', nick);
     currentNick = nick;
     localStorage.setItem('userNick', currentNick);
@@ -213,12 +206,21 @@ if (currentNick !== '') {
 }
 
 document.getElementById('copy-btn').addEventListener('click', function() {
-    const roomNamesText = document.getElementById('room-names').innerText; // Obtém o texto do elemento
+    const roomNamesElement = document.getElementById('room-names');
+    const roomNamesText = roomNamesElement.innerText; // Obtém o texto do elemento
 
-    // Copia o texto para a área de transferência
-    navigator.clipboard.writeText(roomNamesText).then(function() {
-        alert('Nomes copiados para a área de transferência!'); // Mensagem de confirmação
-    }, function(err) {
-        console.error('Erro ao copiar texto: ', err);
-    });
+    console.log('Texto a ser copiado:', roomNamesText); // Adicione esta linha
+
+    // Verifica se roomNamesText não está vazio
+    if (roomNamesText) {
+        // Copia o texto para a área de transferência
+        navigator.clipboard.writeText(roomNamesText).then(function() {
+            alert('Nomes copiados para a área de transferência!'); // Mensagem de confirmação
+        }, function(err) {
+            console.error('Erro ao copiar texto: ', err);
+        });
+    } else {
+        alert('Nenhum nome para copiar!'); // Mensagem caso não haja texto
+    }
 });
+
