@@ -193,11 +193,3 @@ h3 {
     color: #ffcb05;
     text-shadow: 3px 3px #3b4cca;
 }
-#copy-btn {
-    background: none; 
-    color: white;
-    border: none;
-    cursor: pointer;
-    margin-left: 10px;
-    font-size: 20px;
-}

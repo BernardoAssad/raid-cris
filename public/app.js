@@ -15,7 +15,6 @@ const statusDiv = document.getElementById('status');
 const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
-const copyButton = document.getElementById('copy-btn');
 
 function connectEventSource() {
     eventSource = new EventSource('/api/events');
@@ -118,7 +117,6 @@ showNamesButton.addEventListener('click', () => {
     
     if (password === adminPassword) {
         displayFullRoomNames();
-        displayCopyButton();
     } else {
         alert('Senha incorreta! Os nomes não serão exibidos.');
     }
@@ -175,21 +173,21 @@ exitButton.addEventListener('click', () => {
         nickInput.disabled = false;
     }
 });
-
 function displayFullRoomNames() {
     // Exibe a lista de participantes
+    const fullRoomNames = document.getElementById('full-room-names');
     fullRoomNames.classList.remove('hidden');
     
     // Define o texto a ser copiado no elemento correto
     const roomNamesElement = document.getElementById('room-names');
     roomNamesElement.innerText = 'Participantes: ' + participants.join(', ');
 
-    // Mostra o botão de copiar
-    copyButton.classList.remove('hidden');
-}
-
-function displayCopyButton() {
-    copyButton.classList.remove('hidden');
+    // Adiciona a funcionalidade de cópia ao clicar no elemento
+    roomNamesElement.style.cursor = 'pointer';
+    roomNamesElement.title = 'Clique para copiar os nomes';
+    roomNamesElement.onclick = function() {
+        copyTextToClipboard(this.innerText);
+    };
 }
 
 // Inicializa a sala
@@ -203,17 +201,14 @@ if (currentNick !== '') {
     enterButton.classList.add('hidden');
 }
 
-copyButton.addEventListener('click', function() {
-    const roomNamesElement = document.getElementById('room-names');
-    const textToCopy = roomNamesElement.innerText;
-
-    navigator.clipboard.writeText(textToCopy).then(function() {
+function copyTextToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
         alert('Nomes copiados para a área de transferência!');
     }).catch(function(err) {
         console.error('Erro ao copiar texto: ', err);
-        fallbackCopyTextToClipboard(textToCopy);
+        fallbackCopyTextToClipboard(text);
     });
-});
+}
 
 function fallbackCopyTextToClipboard(text) {
     const textArea = document.createElement("textarea");
