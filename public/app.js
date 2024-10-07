@@ -58,32 +58,25 @@ function connectEventSource() {
 
 connectEventSource();
 
-function showPasswordModal(callback) {
-    const passwordModal = document.getElementById('password-modal');
-    const adminPasswordInput = document.getElementById('admin-password-input');
-    const confirmPasswordBtn = document.getElementById('confirm-password-btn');
-    const cancelPasswordBtn = document.getElementById('cancel-password-btn');
-
-    // Exibe o modal
-    passwordModal.classList.remove('hidden');
-
-    // Define o comportamento dos botões
-    confirmPasswordBtn.onclick = () => {
-        const enteredPassword = adminPasswordInput.value;
-        passwordModal.classList.add('hidden'); // Esconde o modal após confirmar
-        adminPasswordInput.value = ''; // Limpa o campo de senha
-        callback(enteredPassword); // Chama o callback com a senha inserida
-    };
-
-    cancelPasswordBtn.onclick = () => {
-        passwordModal.classList.add('hidden'); // Esconde o modal se o usuário cancelar
-        adminPasswordInput.value = ''; // Limpa o campo de senha
-        callback(null); // Cancela a ação
-    };
-}
-
-function askAdminPassword(callback) {
-    showPasswordModal(callback);
+function createPasswordInput(callback) {
+    const passwordDiv = document.createElement('div');
+    
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'password'; // Define o tipo como 'password'
+    passwordInput.placeholder = 'Digite a senha de administrador';
+    
+    const submitButton = document.createElement('button');
+    submitButton.innerText = 'OK';
+    
+    submitButton.addEventListener('click', () => {
+        const password = passwordInput.value;
+        callback(password);
+        document.body.removeChild(passwordDiv); // Remove o campo após o envio
+    });
+    
+    passwordDiv.appendChild(passwordInput);
+    passwordDiv.appendChild(submitButton);
+    document.body.appendChild(passwordDiv); // Adiciona o campo ao corpo da página
 }
 
 function updateRoom() {
@@ -114,9 +107,10 @@ function createParticipantListItem(participant, index, isMainQueue) {
     const deleteIcon = document.createElement('span');
     deleteIcon.innerHTML = '🗑️';
     deleteIcon.style.cursor = 'pointer';
+    
     deleteIcon.addEventListener('click', () => {
-        askAdminPassword((enteredPassword) => {
-            if (enteredPassword === adminPassword) {
+        createPasswordInput((password) => {
+            if (password === adminPassword) {
                 sendAction('REMOVE', participant, isMainQueue);
             } else {
                 alert('Senha incorreta! O participante não será removido.');
@@ -139,9 +133,9 @@ function checkRoomStatus() {
     showNamesButton.classList.toggle('hidden', participants.length === 0);
 }
 
-clearButton.addEventListener('click', () => {
-    askAdminPassword((enteredPassword) => {
-        if (enteredPassword === adminPassword) {
+function clearQueue() {
+    createPasswordInput((password) => {
+        if (password === adminPassword) {
             sendAction('CLEAR').then(() => {
                 updateRoom();
             });
@@ -149,17 +143,17 @@ clearButton.addEventListener('click', () => {
             alert('Senha incorreta! A fila não será limpa.');
         }
     });
-});
+}
 
-showNamesButton.addEventListener('click', () => {
-    askAdminPassword((enteredPassword) => {
-        if (enteredPassword === adminPassword) {
+function showNames() {
+    createPasswordInput((password) => {
+        if (password === adminPassword) {
             displayFullRoomNames();
         } else {
             alert('Senha incorreta! Os nomes não serão exibidos.');
         }
     });
-});
+}
 
 function sendAction(type, nick, isMainQueue) {
     fetch('/api/action', {
@@ -268,3 +262,7 @@ function fallbackCopyTextToClipboard(text) {
 
     document.body.removeChild(textArea);
 }
+
+// Atualize as chamadas das funções removeParticipant, clearQueue e showNames
+clearButton.addEventListener('click', clearQueue);
+showNamesButton.addEventListener('click', showNames);
