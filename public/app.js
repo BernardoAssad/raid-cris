@@ -113,7 +113,6 @@ clearButton.addEventListener('click', () => {
     }
 });
 
-
 showNamesButton.addEventListener('click', () => {
     const password = prompt('Por favor, insira a senha de administrador para mostrar os nomes:');
     
@@ -189,7 +188,6 @@ function displayFullRoomNames() {
     copyButton.classList.remove('hidden');
 }
 
-
 function displayCopyButton() {
     copyButton.classList.remove('hidden');
 }
@@ -205,9 +203,34 @@ if (currentNick !== '') {
     enterButton.classList.add('hidden');
 }
 
-copyButton.addEventListener('click', e => {
-    if (e.target.matches('button') && e.target.nextElementSibling?.matches('p'))
-      navigator.clipboard.writeText(e.target.nextElementSibling.textContent)
-        .then(() => console.log('copied text'), error => console.error('failed to copy', error));
-  });
+copyButton.addEventListener('click', function() {
+    const roomNamesElement = document.getElementById('room-names');
+    const textToCopy = roomNamesElement.innerText;
+
+    navigator.clipboard.writeText(textToCopy).then(function() {
+        alert('Nomes copiados para a área de transferência!');
+    }).catch(function(err) {
+        console.error('Erro ao copiar texto: ', err);
+        fallbackCopyTextToClipboard(textToCopy);
+    });
+});
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        const successful = document.execCommand('copy');
+        const msg = successful ? 'Nomes copiados para a área de transferência!' : 'Falha ao copiar os nomes.';
+        alert(msg);
+    } catch (err) {
+        console.error('Fallback: Erro ao copiar', err);
+        alert('Erro ao copiar os nomes. Por favor, copie manualmente.');
+    }
+
+    document.body.removeChild(textArea);
+}
 
