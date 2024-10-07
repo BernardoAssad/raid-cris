@@ -96,6 +96,7 @@ h1 {
     border-radius: 50%;
     position: relative;
     animation: rotate 3s linear infinite;
+    top: 20px;
 }
 .pokeball:before {
     content: '';
@@ -192,4 +193,16 @@ h1 {
 h3 {
     color: #ffcb05;
     text-shadow: 3px 3px #3b4cca;
+}
+
+@media (max-width: 386px) {
+    #enter-btn {
+        width: 250px;
+        font-size: 18px;
+    }
+    
+    .pokeball {
+        display: block;
+        margin: 10px auto;
+    }
 }
