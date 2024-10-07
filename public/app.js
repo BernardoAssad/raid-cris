@@ -185,9 +185,17 @@ exitButton.addEventListener('click', () => {
 });
 
 function displayFullRoomNames() {
+    // Exibe a lista de participantes
     fullRoomNames.classList.remove('hidden');
-    fullRoomNames.innerText = 'Participantes: ' + participants.join(', ');
+    
+    // Define o texto a ser copiado no elemento correto
+    const roomNamesElement = document.getElementById('room-names');
+    roomNamesElement.innerText = 'Participantes: ' + participants.join(', ');
+
+    // Mostra o botão de copiar
+    copyButton.classList.remove('hidden');
 }
+
 
 function displayCopyButton() {
     copyButton.classList.remove('hidden');
