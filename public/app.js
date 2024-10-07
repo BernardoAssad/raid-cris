@@ -3,7 +3,7 @@ let waitingParticipants = [];
 let currentNick = localStorage.getItem('userNick') || '';
 
 const maxParticipants = 10; // Adicione esta linha
-const adminPassword = 'pokeraidcrisao'; // Adicione esta linha
+let adminPassword;
 
 let eventSource;
 const enterButton = document.getElementById('enter-btn');
@@ -15,6 +15,17 @@ const statusDiv = document.getElementById('status');
 const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
+
+function fetchAdminPassword() {
+    fetch('/api/admin-password')
+        .then(response => response.json())
+        .then(data => {
+            adminPassword = data.password;
+        })
+        .catch(error => console.error('Erro ao buscar a senha do administrador:', error));
+}
+
+fetchAdminPassword();
 
 function connectEventSource() {
     eventSource = new EventSource('/api/events');
@@ -229,4 +240,3 @@ function fallbackCopyTextToClipboard(text) {
 
     document.body.removeChild(textArea);
 }
-

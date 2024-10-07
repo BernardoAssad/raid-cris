@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 
@@ -9,6 +10,10 @@ let participants = [];
 let waitingParticipants = [];
 const maxParticipants = 10;
 let clients = [];
+
+app.get('/api/admin-password', (req, res) => {
+    res.json({ password: process.env.ADMIN_PASSWORD });
+});
 
 app.get('/api/events', (req, res) => {
     // console.log('Nova conexão SSE recebida');
