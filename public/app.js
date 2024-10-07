@@ -15,6 +15,7 @@ const statusDiv = document.getElementById('status');
 const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
+const copyButton = document.getElementById('copy-btn');
 
 function connectEventSource() {
     eventSource = new EventSource('/api/events');
@@ -124,6 +125,7 @@ showNamesButton.addEventListener('click', () => {
     
     if (password === adminPassword) {
         displayFullRoomNames();
+        displayCopyButton();
     } else {
         alert('Senha incorreta! Os nomes não serão exibidos.');
     }
@@ -185,6 +187,10 @@ exitButton.addEventListener('click', () => {
 function displayFullRoomNames() {
     fullRoomNames.classList.remove('hidden');
     fullRoomNames.innerText = 'Participantes: ' + participants.join(', ');
+}
+
+function displayCopyButton() {
+    copyButton.classList.remove('hidden');
 }
 
 // Inicializa a sala
