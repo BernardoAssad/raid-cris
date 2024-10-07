@@ -178,7 +178,7 @@ function displayFullRoomNames() {
     const fullRoomNames = document.getElementById('full-room-names');
     fullRoomNames.classList.remove('hidden');
     
-    // Define o texto a ser copiado no elemento correto
+    // Define o texto a ser exibido no elemento
     const roomNamesElement = document.getElementById('room-names');
     roomNamesElement.innerText = 'Participantes: ' + participants.join(', ');
 
@@ -186,7 +186,8 @@ function displayFullRoomNames() {
     roomNamesElement.style.cursor = 'pointer';
     roomNamesElement.title = 'Clique para copiar os nomes';
     roomNamesElement.onclick = function() {
-        copyTextToClipboard(this.innerText);
+        // Copia apenas os nomes dos participantes
+        copyTextToClipboard(participants.join(', '));
     };
 }
 
