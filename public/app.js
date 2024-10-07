@@ -114,12 +114,13 @@ clearButton.addEventListener('click', () => {
 });
 
 
+// Garante que o botão de copiar esteja visível quando necessário
 showNamesButton.addEventListener('click', () => {
     const password = prompt('Por favor, insira a senha de administrador para mostrar os nomes:');
     
     if (password === adminPassword) {
         displayFullRoomNames();
-        displayCopyButton();
+        copyButton.style.display = 'inline-block'; // Garante que o botão esteja visível
     } else {
         alert('Senha incorreta! Os nomes não serão exibidos.');
     }
@@ -178,20 +179,12 @@ exitButton.addEventListener('click', () => {
 });
 
 function displayFullRoomNames() {
-    // Exibe a lista de participantes
     fullRoomNames.classList.remove('hidden');
     
-    // Define o texto a ser copiado no elemento correto
     const roomNamesElement = document.getElementById('room-names');
-    roomNamesElement.innerText = 'Participantes: ' + participants.join(', ');
+    roomNamesElement.textContent = 'Participantes: ' + participants.join(', ');
 
-    // Mostra o botão de copiar
-    copyButton.classList.remove('hidden');
-}
-
-
-function displayCopyButton() {
-    copyButton.classList.remove('hidden');
+    copyButton.style.display = 'inline-block'; // Garante que o botão esteja visível
 }
 
 // Inicializa a sala
@@ -205,27 +198,21 @@ if (currentNick !== '') {
     enterButton.classList.add('hidden');
 }
 
-document.getElementById('copy-btn').addEventListener('click', function() {
+copyButton.addEventListener('click', function() {
     const roomNamesElement = document.getElementById('room-names');
-    const roomNamesText = roomNamesElement.innerText;
+    const roomNamesText = roomNamesElement.textContent;
 
     if (roomNamesText) {
-        navigator.clipboard.writeText(roomNamesText).then(function() {
-            alert('Nomes copiados para a área de transferência!');
-        }, function(err) {
-            console.error('Erro ao copiar texto: ', err);
-            // Fallback method for older browsers
-            fallbackCopyTextToClipboard(roomNamesText);
-        });
+        copyTextToClipboard(roomNamesText);
     } else {
         alert('Nenhum nome para copiar!');
     }
 });
 
-// Fallback function for copying text in older browsers
 function fallbackCopyTextToClipboard(text) {
     const textArea = document.createElement("textarea");
     textArea.value = text;
+    textArea.style.position = "fixed";  // Evita rolar para o fundo
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
@@ -235,7 +222,7 @@ function fallbackCopyTextToClipboard(text) {
         const msg = successful ? 'Nomes copiados para a área de transferência!' : 'Falha ao copiar os nomes.';
         alert(msg);
     } catch (err) {
-        console.error('Fallback: Oops, unable to copy', err);
+        console.error('Fallback: Erro ao copiar', err);
         alert('Erro ao copiar os nomes. Por favor, copie manualmente.');
     }
 
