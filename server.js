@@ -74,8 +74,9 @@ app.post('/api/action', (req, res) => {
             break;
         case 'CLEAR':
             participants = [];
+            moveFromWaitingToMain(); 
             break;
-    }
+}
 
     broadcastUpdate();
     res.json({ success: true });
