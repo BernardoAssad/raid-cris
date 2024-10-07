@@ -205,6 +205,10 @@ h3 {
         display: block;
         margin: 10px auto;
     }
+
+    #submit-password {
+        margin-top: 7px;
+    }
 }
 
 .modal {
