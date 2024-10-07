@@ -114,13 +114,12 @@ clearButton.addEventListener('click', () => {
 });
 
 
-// Garante que o botão de copiar esteja visível quando necessário
 showNamesButton.addEventListener('click', () => {
     const password = prompt('Por favor, insira a senha de administrador para mostrar os nomes:');
     
     if (password === adminPassword) {
         displayFullRoomNames();
-        copyButton.style.display = 'inline-block'; // Garante que o botão esteja visível
+        displayCopyButton();
     } else {
         alert('Senha incorreta! Os nomes não serão exibidos.');
     }
@@ -179,12 +178,20 @@ exitButton.addEventListener('click', () => {
 });
 
 function displayFullRoomNames() {
+    // Exibe a lista de participantes
     fullRoomNames.classList.remove('hidden');
     
+    // Define o texto a ser copiado no elemento correto
     const roomNamesElement = document.getElementById('room-names');
-    roomNamesElement.textContent = 'Participantes: ' + participants.join(', ');
+    roomNamesElement.innerText = 'Participantes: ' + participants.join(', ');
 
-    copyButton.style.display = 'inline-block'; // Garante que o botão esteja visível
+    // Mostra o botão de copiar
+    copyButton.classList.remove('hidden');
+}
+
+
+function displayCopyButton() {
+    copyButton.classList.remove('hidden');
 }
 
 // Inicializa a sala
@@ -198,34 +205,9 @@ if (currentNick !== '') {
     enterButton.classList.add('hidden');
 }
 
-copyButton.addEventListener('click', function() {
-    const roomNamesElement = document.getElementById('room-names');
-    const roomNamesText = roomNamesElement.textContent;
-
-    if (roomNamesText) {
-        copyTextToClipboard(roomNamesText);
-    } else {
-        alert('Nenhum nome para copiar!');
-    }
-});
-
-function fallbackCopyTextToClipboard(text) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";  // Evita rolar para o fundo
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-        const successful = document.execCommand('copy');
-        const msg = successful ? 'Nomes copiados para a área de transferência!' : 'Falha ao copiar os nomes.';
-        alert(msg);
-    } catch (err) {
-        console.error('Fallback: Erro ao copiar', err);
-        alert('Erro ao copiar os nomes. Por favor, copie manualmente.');
-    }
-
-    document.body.removeChild(textArea);
-}
+copyButton.addEventListener('click', e => {
+    if (e.target.matches('button') && e.target.nextElementSibling?.matches('p'))
+      navigator.clipboard.writeText(e.target.nextElementSibling.textContent)
+        .then(() => console.log('copied text'), error => console.error('failed to copy', error));
+  });
 
