@@ -207,20 +207,38 @@ if (currentNick !== '') {
 
 document.getElementById('copy-btn').addEventListener('click', function() {
     const roomNamesElement = document.getElementById('room-names');
-    const roomNamesText = roomNamesElement.innerText; // Obtém o texto do elemento
+    const roomNamesText = roomNamesElement.innerText;
 
-    console.log('Texto a ser copiado:', roomNamesText); // Adicione esta linha
-
-    // Verifica se roomNamesText não está vazio
     if (roomNamesText) {
-        // Copia o texto para a área de transferência
         navigator.clipboard.writeText(roomNamesText).then(function() {
-            alert('Nomes copiados para a área de transferência!'); // Mensagem de confirmação
+            alert('Nomes copiados para a área de transferência!');
         }, function(err) {
             console.error('Erro ao copiar texto: ', err);
+            // Fallback method for older browsers
+            fallbackCopyTextToClipboard(roomNamesText);
         });
     } else {
-        alert('Nenhum nome para copiar!'); // Mensagem caso não haja texto
+        alert('Nenhum nome para copiar!');
     }
 });
+
+// Fallback function for copying text in older browsers
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        const successful = document.execCommand('copy');
+        const msg = successful ? 'Nomes copiados para a área de transferência!' : 'Falha ao copiar os nomes.';
+        alert(msg);
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+        alert('Erro ao copiar os nomes. Por favor, copie manualmente.');
+    }
+
+    document.body.removeChild(textArea);
+}
 
