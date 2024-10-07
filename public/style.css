@@ -224,7 +224,7 @@ h3 {
     background-color: #fff;
     border-radius: 8px;
     padding: 20px;
-    width: 300px;
+    width: 600px;
     text-align: center;
 }
 
@@ -236,4 +236,25 @@ h3 {
 
 .hidden {
     display: none;
+}
+
+.modal-content input {
+    padding: 7px 20px;
+    border-radius: 5px;
+}
+
+#submit-password {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #3b4cca;
+    border: none;
+    border-radius: 10px;
+    color: #ffcb05;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    display: inline-block;
+}
+#submit-password:hover {
+    background-color: #2130a3;
 }

@@ -2,7 +2,7 @@ let participants = [];
 let waitingParticipants = [];
 let currentNick = localStorage.getItem('userNick') || '';
 
-const maxParticipants = 10; // Adicione esta linha
+const maxParticipants = 10;
 let adminPassword;
 
 let eventSource;
@@ -52,7 +52,7 @@ function connectEventSource() {
 
     eventSource.onerror = (error) => {
         eventSource.close();
-        setTimeout(connectEventSource, 5000);  // Tenta reconectar após 5 segundos
+        setTimeout(connectEventSource, 5000);  
     };
 }
 
@@ -214,27 +214,21 @@ exitButton.addEventListener('click', () => {
     }
 });
 function displayFullRoomNames() {
-    // Exibe a lista de participantes
     const fullRoomNames = document.getElementById('full-room-names');
     fullRoomNames.classList.remove('hidden');
     
-    // Define o texto a ser exibido no elemento
     const roomNamesElement = document.getElementById('room-names');
     roomNamesElement.innerText = 'Participantes: ' + participants.join(', ');
 
-    // Adiciona a funcionalidade de cópia ao clicar no elemento
     roomNamesElement.style.cursor = 'pointer';
     roomNamesElement.title = 'Clique para copiar os nomes';
     roomNamesElement.onclick = function() {
-        // Copia apenas os nomes dos participantes
         copyTextToClipboard(participants.join(', '));
     };
 }
 
-// Inicializa a sala
 updateRoom();
 
-// Verifica se o usuário já está na sala ao carregar a página
 if (currentNick !== '') {
     nickInput.value = currentNick;
     nickInput.disabled = true;
@@ -270,6 +264,5 @@ function fallbackCopyTextToClipboard(text) {
     document.body.removeChild(textArea);
 }
 
-// Atualize as chamadas das funções removeParticipant, clearQueue e showNames
 clearButton.addEventListener('click', clearQueue);
 showNamesButton.addEventListener('click', showNames);
