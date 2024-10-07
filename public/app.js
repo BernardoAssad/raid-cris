@@ -15,10 +15,6 @@ const statusDiv = document.getElementById('status');
 const fullRoomNames = document.getElementById('full-room-names');
 const clearButton = document.getElementById('clear-btn');
 const showNamesButton = document.getElementById('show-names-btn');
-const passwordInput = document.createElement('input');
-
-passwordInput.type = 'password';
-passwordInput.placeholder = 'Por favor, insira a senha de administrador';
 
 function fetchAdminPassword() {
     fetch('/api/admin-password')
@@ -62,6 +58,34 @@ function connectEventSource() {
 
 connectEventSource();
 
+function showPasswordModal(callback) {
+    const passwordModal = document.getElementById('password-modal');
+    const adminPasswordInput = document.getElementById('admin-password-input');
+    const confirmPasswordBtn = document.getElementById('confirm-password-btn');
+    const cancelPasswordBtn = document.getElementById('cancel-password-btn');
+
+    // Exibe o modal
+    passwordModal.classList.remove('hidden');
+
+    // Define o comportamento dos botões
+    confirmPasswordBtn.onclick = () => {
+        const enteredPassword = adminPasswordInput.value;
+        passwordModal.classList.add('hidden'); // Esconde o modal após confirmar
+        adminPasswordInput.value = ''; // Limpa o campo de senha
+        callback(enteredPassword); // Chama o callback com a senha inserida
+    };
+
+    cancelPasswordBtn.onclick = () => {
+        passwordModal.classList.add('hidden'); // Esconde o modal se o usuário cancelar
+        adminPasswordInput.value = ''; // Limpa o campo de senha
+        callback(null); // Cancela a ação
+    };
+}
+
+function askAdminPassword(callback) {
+    showPasswordModal(callback);
+}
+
 function updateRoom() {
     roomList.innerHTML = '';
     waitingList.innerHTML = '';
@@ -91,12 +115,13 @@ function createParticipantListItem(participant, index, isMainQueue) {
     deleteIcon.innerHTML = '🗑️';
     deleteIcon.style.cursor = 'pointer';
     deleteIcon.addEventListener('click', () => {
-        const password = prompt('Por favor, insira a senha de administrador:', passwordInput.value);
-        if (password === adminPassword) {
-            sendAction('REMOVE', participant, isMainQueue);
-        } else {
-            alert('Senha incorreta! O participante não será removido.');
-        }
+        askAdminPassword((enteredPassword) => {
+            if (enteredPassword === adminPassword) {
+                sendAction('REMOVE', participant, isMainQueue);
+            } else {
+                alert('Senha incorreta! O participante não será removido.');
+            }
+        });
     });
 
     listItem.appendChild(deleteIcon);
@@ -115,26 +140,25 @@ function checkRoomStatus() {
 }
 
 clearButton.addEventListener('click', () => {
-    const password = prompt('Por favor, insira a senha de administrador:', passwordInput.value);
-    
-    if (password === adminPassword) {
-        sendAction('CLEAR').then(() => {
-            // Atualiza a sala após a limpeza
-            updateRoom();
-        });
-    } else {
-        alert('Senha incorreta! A fila não será limpa.');
-    }
+    askAdminPassword((enteredPassword) => {
+        if (enteredPassword === adminPassword) {
+            sendAction('CLEAR').then(() => {
+                updateRoom();
+            });
+        } else {
+            alert('Senha incorreta! A fila não será limpa.');
+        }
+    });
 });
 
 showNamesButton.addEventListener('click', () => {
-    const password = prompt('Por favor, insira a senha de administrador:', passwordInput.value);
-    
-    if (password === adminPassword) {
-        displayFullRoomNames();
-    } else {
-        alert('Senha incorreta! Os nomes não serão exibidos.');
-    }
+    askAdminPassword((enteredPassword) => {
+        if (enteredPassword === adminPassword) {
+            displayFullRoomNames();
+        } else {
+            alert('Senha incorreta! Os nomes não serão exibidos.');
+        }
+    });
 });
 
 function sendAction(type, nick, isMainQueue) {
