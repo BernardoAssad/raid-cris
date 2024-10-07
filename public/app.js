@@ -197,3 +197,14 @@ if (currentNick !== '') {
     exitButton.classList.remove('hidden');
     enterButton.classList.add('hidden');
 }
+
+document.getElementById('copy-btn').addEventListener('click', function() {
+    const roomNamesText = document.getElementById('room-names').innerText; // Obtém o texto do elemento
+
+    // Copia o texto para a área de transferência
+    navigator.clipboard.writeText(roomNamesText).then(function() {
+        alert('Nomes copiados para a área de transferência!'); // Mensagem de confirmação
+    }, function(err) {
+        console.error('Erro ao copiar texto: ', err);
+    });
+});
