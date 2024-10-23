@@ -153,13 +153,7 @@ function clearQueue() {
 }
 
 function showNames() {
-    openPasswordModal((password) => {
-        if (password === adminPassword) {
-            displayFullRoomNames();
-        } else {
-            alert('Senha incorreta! Os nomes não serão exibidos.');
-        }
-    });
+    displayFullRoomNames();
 }
 
 function sendAction(type, nick, isMainQueue) {
